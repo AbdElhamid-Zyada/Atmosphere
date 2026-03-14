@@ -96,7 +96,6 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
                 }
             }
 
-            /*
             val forecastJob = launch(kotlinx.coroutines.Dispatchers.IO) {
                 try {
                     android.util.Log.d("AtmosphereDebug", "Forecast Call started")
@@ -107,11 +106,9 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
                     android.util.Log.e("AtmosphereDebug", "Forecast API failed: ${e.message}", e)
                 }
             }
-            */
 
             currentJob.join()
-            // forecastJob.join()
-            
+            forecastJob.join()
             _isRefreshing.value = false
             android.util.Log.d("AtmosphereDebug", "fetchWeather Completed")
         }

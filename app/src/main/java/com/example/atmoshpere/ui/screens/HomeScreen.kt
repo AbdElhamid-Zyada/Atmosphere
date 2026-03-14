@@ -148,7 +148,7 @@ fun HomeScreenContent(viewModel: WeatherViewModel, modifier: Modifier = Modifier
                     val first = dailyList.first()
                     val max = dailyList.maxOf { it.main.temp_max }
                     val min = dailyList.minOf { it.main.temp_min }
-                    val dayStr = SimpleDateFormat("EEE\nndd MMM", Locale.getDefault()).format(Date(first.dt * 1000)).replace("\nn", "\n")
+                    val dayStr = SimpleDateFormat("EEE\ndd MMM", Locale.getDefault()).format(Date(first.dt * 1000))
 
                     GlassCard(modifier = Modifier.fillMaxWidth(), alpha = 0.15f) {
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
