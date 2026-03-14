@@ -45,6 +45,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
 
     private val alarmManager = application.getSystemService(Context.ALARM_SERVICE) as AlarmManager
     private val locationDao = com.example.atmoshpere.data.local.AppDatabase.getDatabase(application).locationDao()
+    private val fusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(application)
 
     init {
         android.util.Log.d("AtmosphereDebug", "ViewModel Init Started")
@@ -76,8 +77,33 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
 
     fun fetchLocationAndWeather() {
         android.util.Log.d("AtmosphereDebug", "fetchLocationAndWeather Called")
-        // Static fetch for current location for now
-        fetchWeather(51.5074, -0.1278) // London
+        
+        val context = getApplication<android.app.Application>()
+        val hasCoarse = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        val hasFine = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+        if (hasCoarse || hasFine) {
+            try {
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+                        android.util.Log.d("AtmosphereDebug", "Location found: ${location.latitude}, ${location.longitude}")
+                        fetchWeather(location.latitude, location.longitude)
+                    } else {
+                        android.util.Log.d("AtmosphereDebug", "lastLocation was null, fetching London")
+                        fetchWeather(51.5074, -0.1278) // London Fallback
+                    }
+                }.addOnFailureListener {
+                    android.util.Log.e("AtmosphereDebug", "Failed to get location: ${it.message}")
+                    fetchWeather(51.5074, -0.1278) // London Fallback
+                }
+            } catch (e: SecurityException) {
+                android.util.Log.e("AtmosphereDebug", "SecurityException fetching location: ${e.message}")
+                fetchWeather(51.5074, -0.1278)
+            }
+        } else {
+            android.util.Log.d("AtmosphereDebug", "Location permission NOT granted, fetching London")
+            fetchWeather(51.5074, -0.1278)
+        }
     }
 
     fun fetchWeather(lat: Double, lon: Double) {

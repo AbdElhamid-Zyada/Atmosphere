@@ -17,7 +17,6 @@ interface WeatherApi {
         @Query("lat") lat: Double,
         @Query("lon") lon: Double,
         @Query("appid") apiKey: String,
-        @Query("units") units: String = "metric",
-        @Query("cnt") cnt: Int = 10
+        @Query("units") units: String = "metric"
     ) : FiveDayForecastResponse
 }

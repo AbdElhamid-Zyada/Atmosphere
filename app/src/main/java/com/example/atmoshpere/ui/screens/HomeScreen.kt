@@ -26,8 +26,31 @@ import kotlin.math.roundToInt
 
 @Composable
 fun HomeScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val coarse = permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        val fine = permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        if (coarse || fine) {
+            viewModel.fetchLocationAndWeather()
+        } else {
+            viewModel.fetchLocationAndWeather() // ViewModel handles fallback
+        }
+    }
+
     LaunchedEffect(Unit) {
-        viewModel.fetchLocationAndWeather()
+        val coarse = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        val fine = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        
+        if (coarse || fine) {
+            viewModel.fetchLocationAndWeather()
+        } else {
+            permissionLauncher.launch(arrayOf(
+                android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ))
+        }
     }
 
     HomeScreenContent(viewModel = viewModel, modifier = modifier)
@@ -116,7 +139,7 @@ fun HomeScreenContent(viewModel: WeatherViewModel, modifier: Modifier = Modifier
                     val hourly = hourlies[i]
                     val time = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(hourly.dt * 1000))
                     GlassCard(
-                        modifier = Modifier.width(70.dp).height(110.dp),
+                        modifier = Modifier.width(85.dp).height(110.dp),
                         alpha = 0.15f
                     ) {
                         Column(
