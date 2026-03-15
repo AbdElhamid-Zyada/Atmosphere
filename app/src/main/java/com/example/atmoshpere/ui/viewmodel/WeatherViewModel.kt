@@ -44,6 +44,10 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     private val _uiEvent = kotlinx.coroutines.channels.Channel<UiEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
 
+    // Autocomplete Solutions
+    private val _autocompleteResults = MutableStateFlow<List<com.example.atmoshpere.data.remote.GeocodingResponse>>(emptyList())
+    val autocompleteResults: StateFlow<List<com.example.atmoshpere.data.remote.GeocodingResponse>> = _autocompleteResults
+
     sealed class UiEvent {
         data class ShowSnackbar(val message: String) : UiEvent()
     }
@@ -74,9 +78,50 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun addLocation(name: String, lat: Double, lon: Double) {
+    fun addLocation(name: String, lat: Double, lon: Double, country: String) {
         viewModelScope.launch {
-            repository.insertLocation(FavoriteLocation(cityName = name, latitude = lat, longitude = lon))
+            try {
+                // Fetch to get exact timezone offset from OpenWeather
+                val response = repository.getCurrentWeather(lat, lon, com.example.atmoshpere.BuildConfig.API_KEY)
+                repository.insertLocation(
+                    FavoriteLocation(
+                        cityName = name, 
+                        latitude = lat, 
+                        longitude = lon, 
+                        countryName = country,
+                        timezoneOffset = response.timezone
+                    )
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // Fallback with timezone 0
+                repository.insertLocation(
+                    FavoriteLocation(
+                        cityName = name, 
+                        latitude = lat, 
+                        longitude = lon, 
+                        countryName = country,
+                        timezoneOffset = 0
+                    )
+                )
+            }
+        }
+    }
+
+    fun searchLocation(query: String) {
+        viewModelScope.launch {
+            if (query.length < 3) {
+                _autocompleteResults.value = emptyList()
+                return@launch
+            }
+            try {
+                val response = com.example.atmoshpere.data.remote.GeocodingClient.geocodingApi.autocomplete(query)
+                if (response.isSuccessful) {
+                    _autocompleteResults.value = response.body() ?: emptyList()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 

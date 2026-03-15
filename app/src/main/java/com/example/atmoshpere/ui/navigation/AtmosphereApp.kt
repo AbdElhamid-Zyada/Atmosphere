@@ -28,6 +28,8 @@ enum class AppDestination(val route: String, val icon: ImageVector, val title: S
 @Composable
 fun AtmosphereApp() {
     var currentRoute by remember { mutableStateOf(AppDestination.HOME.route) }
+    var selectedLocation by remember { mutableStateOf<com.example.atmoshpere.data.local.FavoriteLocation?>(null) }
+    var showAddLocation by remember { mutableStateOf(false) }
     val weatherViewModel: WeatherViewModel = viewModel()
 
     val bgGradient = Brush.verticalGradient(
@@ -38,34 +40,56 @@ fun AtmosphereApp() {
         Scaffold(
             containerColor = Color.Transparent,
             bottomBar = {
-                NavigationBar(
-                    containerColor = Color(0xFF00E5FF), // Match bottom gradient color but solid
-                    tonalElevation = 8.dp
-                ) {
-                    AppDestination.values().forEach { destination ->
-                        NavigationBarItem(
-                            icon = { Icon(destination.icon, contentDescription = destination.title) },
-                            label = { Text(destination.title) },
-                            selected = currentRoute == destination.route,
-                            onClick = { currentRoute = destination.route },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = Color.White,
-                                selectedTextColor = Color.White,
-                                unselectedIconColor = Color.White.copy(alpha = 0.6f),
-                                unselectedTextColor = Color.White.copy(alpha = 0.6f),
-                                indicatorColor = Color.White.copy(alpha = 0.2f)
+                if (selectedLocation == null && !showAddLocation) {
+                    NavigationBar(
+                        containerColor = Color(0xFF00E5FF),
+                        tonalElevation = 8.dp
+                    ) {
+                        AppDestination.values().forEach { destination ->
+                            NavigationBarItem(
+                                icon = { Icon(destination.icon, contentDescription = destination.title) },
+                                label = { Text(destination.title) },
+                                selected = currentRoute == destination.route,
+                                onClick = { currentRoute = destination.route },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = Color.White,
+                                    selectedTextColor = Color.White,
+                                    unselectedIconColor = Color.White.copy(alpha = 0.6f),
+                                    unselectedTextColor = Color.White.copy(alpha = 0.6f),
+                                    indicatorColor = Color.White.copy(alpha = 0.2f)
+                                )
                             )
-                        )
+                        }
                     }
                 }
             }
         ) { paddingValues ->
             Modifier.padding(paddingValues).let { defaultModifier ->
-                when (currentRoute) {
-                    AppDestination.HOME.route -> HomeScreen(viewModel = weatherViewModel, modifier = defaultModifier)
-                    AppDestination.FAVORITES.route -> FavoritesScreen(viewModel = weatherViewModel, modifier = defaultModifier)
-                    AppDestination.ALERTS.route -> AlertsScreen(viewModel = weatherViewModel, modifier = defaultModifier)
-                    AppDestination.SETTINGS.route -> SettingsScreen(viewModel = weatherViewModel, modifier = defaultModifier)
+                if (selectedLocation != null) {
+                    HomeScreen(
+                        viewModel = weatherViewModel,
+                        location = selectedLocation,
+                        onBack = { selectedLocation = null },
+                        modifier = defaultModifier
+                    )
+                } else if (showAddLocation) {
+                    AddLocationScreen(
+                        viewModel = weatherViewModel,
+                        onBack = { showAddLocation = false },
+                        modifier = defaultModifier
+                    )
+                } else {
+                    when (currentRoute) {
+                        AppDestination.HOME.route -> HomeScreen(viewModel = weatherViewModel, modifier = defaultModifier)
+                        AppDestination.FAVORITES.route -> FavoritesScreen(
+                            viewModel = weatherViewModel,
+                            onLocationClick = { selectedLocation = it },
+                            onAddLocationClick = { showAddLocation = true },
+                            modifier = defaultModifier
+                        )
+                        AppDestination.ALERTS.route -> AlertsScreen(viewModel = weatherViewModel, modifier = defaultModifier)
+                        AppDestination.SETTINGS.route -> SettingsScreen(viewModel = weatherViewModel, modifier = defaultModifier)
+                    }
                 }
             }
         }

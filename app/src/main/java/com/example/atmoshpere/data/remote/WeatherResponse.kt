@@ -10,7 +10,8 @@ data class CurrentWeatherResponse(
     val clouds: Clouds,
     val dt: Long,
     val name: String,
-    val sys: Sys
+    val sys: Sys,
+    val timezone: Int = 0
 )
 
 data class FiveDayForecastResponse(

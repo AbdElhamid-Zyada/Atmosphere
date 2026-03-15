@@ -25,7 +25,12 @@ import java.util.*
 import kotlin.math.roundToInt
 
 @Composable
-fun HomeScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
+fun HomeScreen(
+    viewModel: WeatherViewModel, 
+    location: com.example.atmoshpere.data.local.FavoriteLocation? = null,
+    onBack: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
+) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
@@ -39,25 +44,34 @@ fun HomeScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
         }
     }
 
-    LaunchedEffect(Unit) {
-        val coarse = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        val fine = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        
-        if (coarse || fine) {
-            viewModel.fetchLocationAndWeather()
+    LaunchedEffect(location) {
+        if (location != null) {
+            android.util.Log.d("AtmosphereDebug", "HomeScreen fetching for favorite: ${location.cityName}")
+            viewModel.fetchWeather(location.latitude, location.longitude)
         } else {
-            permissionLauncher.launch(arrayOf(
-                android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ))
+            val coarse = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            val fine = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            if (coarse || fine) {
+                viewModel.fetchLocationAndWeather()
+            } else {
+                permissionLauncher.launch(arrayOf(
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION
+                ))
+            }
         }
     }
 
-    HomeScreenContent(viewModel = viewModel, modifier = modifier)
+    HomeScreenContent(viewModel = viewModel, location = location, onBack = onBack, modifier = modifier)
 }
 
 @Composable
-fun HomeScreenContent(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
+fun HomeScreenContent(
+    viewModel: WeatherViewModel, 
+    location: com.example.atmoshpere.data.local.FavoriteLocation? = null,
+    onBack: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
+) {
     val currentWeather by viewModel.currentWeather.collectAsState()
     val forecast by viewModel.forecast.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
@@ -84,7 +98,26 @@ fun HomeScreenContent(viewModel: WeatherViewModel, modifier: Modifier = Modifier
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(48.dp))
+        if (location != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                IconButton(onClick = { onBack?.invoke() }) {
+                    Text("←", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                }
+                Text(
+                    text = "📍 ${location.cityName}",
+                    color = Color.White.copy(alpha = 0.9f),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.width(48.dp)) // balance Back button width
+            }
+        }
+
+        Spacer(modifier = Modifier.height(if (location != null) 16.dp else 48.dp))
         Text(
             text = sdfTime.format(Date()),
             color = Color.White,

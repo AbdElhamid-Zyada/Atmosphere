@@ -1,6 +1,7 @@
 package com.example.atmoshpere.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,10 +26,23 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FavoritesScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
+fun FavoritesScreen(
+    viewModel: WeatherViewModel, 
+    onLocationClick: (com.example.atmoshpere.data.local.FavoriteLocation) -> Unit,
+    onAddLocationClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val favorites by viewModel.favorites.collectAsState()
-    var locationToDelete by remember { mutableStateOf<FavoriteLocation?>(null) }
-    var showAddDialog by remember { mutableStateOf(false) }
+    var locationToDelete by remember { mutableStateOf<com.example.atmoshpere.data.local.FavoriteLocation?>(null) }
+    
+    // Minute Clock Timer Tick
+    var currentTime by remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(60000)
+            currentTime = System.currentTimeMillis()
+        }
+    }
 
     Box(modifier = modifier.fillMaxSize().padding(horizontal = 24.dp)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -67,12 +81,16 @@ fun FavoritesScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) 
                                     .padding(horizontal = 24.dp),
                                 contentAlignment = Alignment.CenterEnd
                             ) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.White)
+                                // Empty background while swiping
                             }
                         },
                         enableDismissFromStartToEnd = false
                     ) {
-                        FavoriteCard(country = "Country", city = location.cityName, timeZone = "12:00\nGMT")
+                        FavoriteCard(
+                            location = location,
+                            currentTime = currentTime,
+                            onClick = { onLocationClick(location) }
+                        )
                     }
                 }
             }
@@ -85,17 +103,13 @@ fun FavoritesScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) 
                 .padding(bottom = 24.dp)
         ) {
             Button(
-                onClick = { showAddDialog = true },
+                onClick = { onAddLocationClick() },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                 shape = RoundedCornerShape(28.dp)
             ) {
                 Text("+ ADD LOCATION", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
-        }
-
-        if (showAddDialog) {
-            // Add dialog implementation if needed on previous screen searches
         }
 
         locationToDelete?.let { location ->
@@ -113,20 +127,61 @@ fun FavoritesScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) 
 }
 
 @Composable
-fun FavoriteCard(country: String, city: String, timeZone: String) {
-    GlassCard(modifier = Modifier.fillMaxWidth(), alpha = 0.15f) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+fun FavoriteCard(
+    location: com.example.atmoshpere.data.local.FavoriteLocation,
+    currentTime: Long,
+    onClick: () -> Unit
+) {
+    // Calculate Local Time based on timezoneOffset (seconds)
+    val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+    calendar.timeInMillis = currentTime
+    calendar.add(Calendar.SECOND, location.timezoneOffset)
+    
+    val sdfTime = SimpleDateFormat("HH:mm", Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
+    }
+    val formattedTime = sdfTime.format(calendar.time)
+    
+    val hours = location.timezoneOffset / 3600
+    val timeZoneLabel = if (hours >= 0) "GMT+$hours" else "GMT$hours" // Can fallback to specific labels if known
+
+    GlassCard(
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).clickable { onClick() }, 
+        alpha = 0.15f
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp), 
+            horizontalArrangement = Arrangement.SpaceBetween, 
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Column {
-                Text(country, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    location.countryName.ifEmpty { "Location" }, 
+                    color = Color.White, 
+                    fontSize = 24.sp, 
+                    fontWeight = FontWeight.Bold
+                )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(city, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    location.cityName, 
+                    color = Color.White.copy(alpha = 0.8f), 
+                    fontSize = 14.sp, 
+                    fontWeight = FontWeight.Medium
+                )
             }
-            val timeParts = timeZone.split("\n")
             Column(horizontalAlignment = Alignment.End) {
-                Text(timeParts[0], color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                if (timeParts.size > 1) {
-                    Text(timeParts[1], color = Color.White.copy(alpha=0.8f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                }
+                Text(
+                    formattedTime, 
+                    color = Color.White, 
+                    fontSize = 28.sp, 
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    timeZoneLabel, 
+                    color = Color.White.copy(alpha = 0.6f), 
+                    fontSize = 12.sp, 
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
