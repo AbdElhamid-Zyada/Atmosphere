@@ -30,6 +30,14 @@ interface GeocodingApi {
         @Query("addressdetails") address: Int = 1,
         @Query("limit") limit: Int = 5
     ): Response<List<GeocodingResponse>>
+
+    @GET("reverse")
+    suspend fun reverseGeocode(
+        @Query("lat") lat: String,
+        @Query("lon") lon: String,
+        @Query("format") format: String = "json",
+        @Query("addressdetails") address: Int = 1
+    ): Response<GeocodingResponse>
 }
 
 object GeocodingClient {

@@ -48,6 +48,9 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     private val _autocompleteResults = MutableStateFlow<List<com.example.atmoshpere.data.remote.GeocodingResponse>>(emptyList())
     val autocompleteResults: StateFlow<List<com.example.atmoshpere.data.remote.GeocodingResponse>> = _autocompleteResults
 
+    private val _reverseGeocodeResult = MutableStateFlow<com.example.atmoshpere.data.remote.GeocodingResponse?>(null)
+    val reverseGeocodeResult: StateFlow<com.example.atmoshpere.data.remote.GeocodingResponse?> = _reverseGeocodeResult
+
     sealed class UiEvent {
         data class ShowSnackbar(val message: String) : UiEvent()
     }
@@ -124,6 +127,21 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
             }
         }
     }
+
+    fun reverseGeocode(lat: Double, lon: Double) {
+        viewModelScope.launch {
+            try {
+                val response = com.example.atmoshpere.data.remote.GeocodingClient.geocodingApi.reverseGeocode(lat.toString(), lon.toString())
+                if (response.isSuccessful) {
+                    _reverseGeocodeResult.value = response.body()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun clearReverseGeocode() { _reverseGeocodeResult.value = null }
 
     fun removeLocation(location: FavoriteLocation) {
         viewModelScope.launch {
