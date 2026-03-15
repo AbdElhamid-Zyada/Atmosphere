@@ -128,6 +128,7 @@ class AlarmActivity : ComponentActivity() {
                             onClick = { 
                                 mediaPlayer?.stop()
                                 mediaPlayer?.release()
+                                mediaPlayer = null
                                 finish() 
                             },
                             modifier = Modifier
@@ -146,8 +147,8 @@ class AlarmActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        mediaPlayer?.stop()
-        mediaPlayer?.release()
+//        mediaPlayer?.stop()
+//        mediaPlayer?.release()
         super.onDestroy()
     }
 }
