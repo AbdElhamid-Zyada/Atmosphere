@@ -81,6 +81,14 @@ fun HomeScreenContent(
     val tempUnit by settingsPrefs.tempUnit.collectAsState(initial = "metric")
     val windUnit by settingsPrefs.windUnit.collectAsState(initial = "m/s")
     val language by settingsPrefs.language.collectAsState(initial = "en")
+    val appearance by settingsPrefs.appearance.collectAsState(initial = "DARK_GLASS")
+
+    val isDark = when (appearance) {
+        "DARK_GLASS" -> true
+        "FROST_WHITE" -> false
+        else -> androidx.compose.foundation.isSystemInDarkTheme()
+    }
+    val cardColor = if (isDark) Color(0xFF1F2937) else Color.White
 
     val tempLabel = when(tempUnit) {
         "imperial" -> "°F"
@@ -169,7 +177,7 @@ fun HomeScreenContent(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        GlassCard(modifier = Modifier.fillMaxWidth(), alpha = 0.15f) {
+        GlassCard(modifier = Modifier.fillMaxWidth(), alpha = if (isDark) 0.4f else 0.15f, containerColor = cardColor) {
             Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceAround) {
                 InfoCard(value = "${current.main.humidity}%", icon = "💧")
                 InfoCard(value = "${displayWindSpeed.roundToInt()} $windUnit", icon = "💨")
@@ -193,7 +201,8 @@ fun HomeScreenContent(
                     val time = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(hourly.dt * 1000))
                     GlassCard(
                         modifier = Modifier.width(85.dp).height(110.dp),
-                        alpha = 0.15f
+                        alpha = if (isDark) 0.4f else 0.15f,
+                        containerColor = cardColor
                     ) {
                         Column(
                             modifier = Modifier.fillMaxSize(),
@@ -226,7 +235,7 @@ fun HomeScreenContent(
                     val min = dailyList.minOf { it.main.temp_min }
                     val dayStr = SimpleDateFormat("EEE\ndd MMM", Locale.getDefault()).format(Date(first.dt * 1000))
 
-                    GlassCard(modifier = Modifier.fillMaxWidth(), alpha = 0.15f) {
+                    GlassCard(modifier = Modifier.fillMaxWidth(), alpha = if (isDark) 0.4f else 0.15f, containerColor = cardColor) {
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                             val dp = dayStr.split("\n")
                             Column {

@@ -30,6 +30,7 @@ fun AtmosphereApp() {
     val context = androidx.compose.ui.platform.LocalContext.current
     val settingsPrefs = remember { com.example.atmoshpere.data.local.SettingsPreferences(context) }
     val language by settingsPrefs.language.collectAsState(initial = "en")
+    val appearance by settingsPrefs.appearance.collectAsState(initial = "DARK_GLASS")
 
     val layoutDirection = if (language == "ar") androidx.compose.ui.unit.LayoutDirection.Rtl else androidx.compose.ui.unit.LayoutDirection.Ltr
 
@@ -39,67 +40,78 @@ fun AtmosphereApp() {
         var showAddLocation by remember { mutableStateOf(false) }
         val weatherViewModel: WeatherViewModel = viewModel()
 
-    val bgGradient = Brush.verticalGradient(
-        colors = listOf(Color(0xFF4DA0FF), Color(0xFF00E5FF))
-    )
+        val isSystemDark = androidx.compose.foundation.isSystemInDarkTheme()
+        val isDark = when(appearance) {
+            "DARK_GLASS" -> true
+            "FROST_WHITE" -> false
+            else -> isSystemDark
+        }
 
-    Box(modifier = Modifier.fillMaxSize().background(bgGradient)) {
-        Scaffold(
-            containerColor = Color.Transparent,
-            bottomBar = {
-                if (selectedLocation == null && !showAddLocation) {
-                    NavigationBar(
-                        containerColor = Color(0xFF00E5FF),
-                        tonalElevation = 8.dp
-                    ) {
-                        AppDestination.values().forEach { destination ->
-                            NavigationBarItem(
-                                icon = { Icon(destination.icon, contentDescription = destination.title) },
-                                label = { Text(com.example.atmoshpere.ui.utils.Translations.get(destination.title, language)) },
-                                selected = currentRoute == destination.route,
-                                onClick = { currentRoute = destination.route },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = Color.White,
-                                    selectedTextColor = Color.White,
-                                    unselectedIconColor = Color.White.copy(alpha = 0.6f),
-                                    unselectedTextColor = Color.White.copy(alpha = 0.6f),
-                                    indicatorColor = Color.White.copy(alpha = 0.2f)
+        val backgroundColor = if (isDark) Color(0xFF0B1120) else Color(0xFFE8F1F8)
+        val backgroundBottomColor = if (isDark) Color(0xFF131A2D) else Color(0xFFCFDEF3)
+
+        val bgGradient = Brush.verticalGradient(
+            colors = listOf(backgroundColor, backgroundBottomColor)
+        )
+
+        Box(modifier = Modifier.fillMaxSize().background(bgGradient)) {
+            Scaffold(
+                containerColor = Color.Transparent,
+                bottomBar = {
+                    if (selectedLocation == null && !showAddLocation) {
+                        NavigationBar(
+                            containerColor = if (isDark) Color(0xFF131A2D).copy(alpha = 0.95f) else Color(0xFF00E5FF),
+                            tonalElevation = 8.dp
+                        ) {
+                            AppDestination.values().forEach { destination ->
+                                val label = com.example.atmoshpere.ui.utils.Translations.get(destination.title, language)
+                                NavigationBarItem(
+                                    icon = { Icon(destination.icon, contentDescription = label) },
+                                    label = { Text(label) },
+                                    selected = currentRoute == destination.route,
+                                    onClick = { currentRoute = destination.route },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = if (isDark) Color(0xFF00E5FF) else Color.White,
+                                        selectedTextColor = if (isDark) Color(0xFF00E5FF) else Color.White,
+                                        unselectedIconColor = Color.White.copy(alpha = 0.6f),
+                                        unselectedTextColor = Color.White.copy(alpha = 0.6f),
+                                        indicatorColor = Color.White.copy(alpha = 0.2f)
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
                 }
-            }
-        ) { paddingValues ->
-            Modifier.padding(paddingValues).let { defaultModifier ->
-                if (selectedLocation != null) {
-                    HomeScreen(
-                        viewModel = weatherViewModel,
-                        location = selectedLocation,
-                        onBack = { selectedLocation = null },
-                        modifier = defaultModifier
-                    )
-                } else if (showAddLocation) {
-                    AddLocationScreen(
-                        viewModel = weatherViewModel,
-                        onBack = { showAddLocation = false },
-                        modifier = defaultModifier
-                    )
-                } else {
-                    when (currentRoute) {
-                        AppDestination.HOME.route -> HomeScreen(viewModel = weatherViewModel, modifier = defaultModifier)
-                        AppDestination.FAVORITES.route -> FavoritesScreen(
+            ) { paddingValues ->
+                Modifier.padding(paddingValues).let { defaultModifier ->
+                    if (selectedLocation != null) {
+                        HomeScreen(
                             viewModel = weatherViewModel,
-                            onLocationClick = { selectedLocation = it },
-                            onAddLocationClick = { showAddLocation = true },
+                            location = selectedLocation,
+                            onBack = { selectedLocation = null },
                             modifier = defaultModifier
                         )
-                        AppDestination.ALERTS.route -> AlertsScreen(viewModel = weatherViewModel, modifier = defaultModifier)
-                        AppDestination.SETTINGS.route -> SettingsScreen(viewModel = weatherViewModel, modifier = defaultModifier)
+                    } else if (showAddLocation) {
+                        AddLocationScreen(
+                            viewModel = weatherViewModel,
+                            onBack = { showAddLocation = false },
+                            modifier = defaultModifier
+                        )
+                    } else {
+                        when (currentRoute) {
+                            AppDestination.HOME.route -> HomeScreen(viewModel = weatherViewModel, modifier = defaultModifier)
+                            AppDestination.FAVORITES.route -> FavoritesScreen(
+                                viewModel = weatherViewModel,
+                                onLocationClick = { selectedLocation = it },
+                                onAddLocationClick = { showAddLocation = true },
+                                modifier = defaultModifier
+                            )
+                            AppDestination.ALERTS.route -> AlertsScreen(viewModel = weatherViewModel, modifier = defaultModifier)
+                            AppDestination.SETTINGS.route -> SettingsScreen(viewModel = weatherViewModel, modifier = defaultModifier)
+                        }
                     }
                 }
             }
         }
     }
-}
 }

@@ -136,6 +136,17 @@ fun FavoriteCard(
     currentTime: Long,
     onClick: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val settingsPrefs = remember { com.example.atmoshpere.data.local.SettingsPreferences(context) }
+    val appearance by settingsPrefs.appearance.collectAsState(initial = "DARK_GLASS")
+
+    val isDark = when (appearance) {
+        "DARK_GLASS" -> true
+        "FROST_WHITE" -> false
+        else -> androidx.compose.foundation.isSystemInDarkTheme()
+    }
+    val cardColor = if (isDark) Color(0xFF1F2937) else Color.White
+
     // Calculate Local Time based on timezoneOffset (seconds)
     val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
     calendar.timeInMillis = currentTime
@@ -151,7 +162,8 @@ fun FavoriteCard(
 
     GlassCard(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).clickable { onClick() }, 
-        alpha = 0.15f
+        alpha = if (isDark) 0.4f else 0.15f,
+        containerColor = cardColor
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp), 

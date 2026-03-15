@@ -16,14 +16,15 @@ fun GlassCard(
     modifier: Modifier = Modifier,
     alpha: Float = 0.15f,
     cornerRadius: Int = 24,
+    containerColor: Color = Color.White,
     content: @Composable () -> Unit
 ) {
     val shape = RoundedCornerShape(cornerRadius.dp)
     Box(
         modifier = modifier
             .clip(shape)
-            .background(Color.White.copy(alpha = alpha))
-            .border(1.dp, Color.White.copy(alpha = 0.3f), shape)
+            .background(containerColor.copy(alpha = alpha))
+            .border(1.dp, containerColor.copy(alpha = 0.3f), shape)
             .padding(16.dp)
     ) {
         content()

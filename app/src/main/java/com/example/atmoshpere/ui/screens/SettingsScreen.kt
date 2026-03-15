@@ -35,6 +35,13 @@ fun SettingsScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
     val useCurrentLocation by settingsPrefs.useCurrentLocation.collectAsState(initial = true)
     val customLocationName by settingsPrefs.customLocationName.collectAsState(initial = "Alexandria, Egypt")
     val appearance by settingsPrefs.appearance.collectAsState(initial = "DARK_GLASS")
+    
+    val isDark = when (appearance) {
+        "DARK_GLASS" -> true
+        "FROST_WHITE" -> false
+        else -> androidx.compose.foundation.isSystemInDarkTheme()
+    }
+    val cardColor = if (isDark) Color(0xFF1F2937) else Color.White
 
     Column(
         modifier = modifier
@@ -62,7 +69,7 @@ fun SettingsScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        GlassCard(modifier = Modifier.fillMaxWidth(), alpha = 0.15f) {
+        GlassCard(modifier = Modifier.fillMaxWidth(), alpha = if (isDark) 0.4f else 0.15f, containerColor = cardColor) {
             Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text(Translations.get("Temperature Unit", language), color = Color.White)
