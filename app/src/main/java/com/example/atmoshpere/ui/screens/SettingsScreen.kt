@@ -31,6 +31,9 @@ fun SettingsScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
     val tempUnit by settingsPrefs.tempUnit.collectAsState(initial = "metric")
     val windUnit by settingsPrefs.windUnit.collectAsState(initial = "m/s")
     val language by settingsPrefs.language.collectAsState(initial = "en")
+    val useCurrentLocation by settingsPrefs.useCurrentLocation.collectAsState(initial = true)
+    val customLocationName by settingsPrefs.customLocationName.collectAsState(initial = "Alexandria, Egypt")
+    val appearance by settingsPrefs.appearance.collectAsState(initial = "DARK_GLASS")
 
     Column(
         modifier = modifier
@@ -63,8 +66,8 @@ fun SettingsScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
                 // Temperature Row
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("Temperature Unit", color = Color.White)
-                    val options = listOf("metric", "imperial")
-                    val displayOptions = listOf("°C", "°F")
+                    val options = listOf("metric", "imperial", "standard")
+                    val displayOptions = listOf("°C", "°F", "K")
                     val selectedIndex = options.indexOf(tempUnit)
                     SegmentedControl(options = displayOptions, selectedIndex = if(selectedIndex>=0) selectedIndex else 0) {
                         scope.launch { settingsPrefs.saveTempUnit(options[it]) }
@@ -78,6 +81,46 @@ fun SettingsScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
                     val selectedIndex = options.indexOf(windUnit)
                     SegmentedControl(options = options, selectedIndex = if(selectedIndex>=0) selectedIndex else 0) {
                         scope.launch { settingsPrefs.saveWindUnit(options[it]) }
+                    }
+                }
+
+                // Location Options
+                Column {
+                    Text("Location", color = Color.White)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(
+                            selected = useCurrentLocation,
+                            onClick = { scope.launch { settingsPrefs.saveUseCurrentLocation(true) } },
+                            colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00E5FF), unselectedColor = Color.White)
+                        )
+                        Text("Use current location", color = Color.White, modifier = Modifier.clickable { scope.launch { settingsPrefs.saveUseCurrentLocation(true) } })
+                    }
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(
+                            selected = !useCurrentLocation,
+                            onClick = { scope.launch { settingsPrefs.saveUseCurrentLocation(false) } },
+                            colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00E5FF), unselectedColor = Color.White)
+                        )
+                        Text("Choose custom location", color = Color.White, modifier = Modifier.clickable { scope.launch { settingsPrefs.saveUseCurrentLocation(false) } })
+                    }
+
+                    if (!useCurrentLocation) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color.White.copy(alpha = 0.2f))
+                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                        ) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text(customLocationName, color = Color.White)
+                                Text("CHANGE", color = Color(0xFF00E5FF), fontWeight = FontWeight.Bold, modifier = Modifier.clickable { /* Trigger Search/Dialog */ })
+                            }
+                        }
                     }
                 }
 
@@ -95,6 +138,29 @@ fun SettingsScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
         }
 
         Spacer(modifier = Modifier.height(32.dp))
+
+        Text(
+            text = "APPEARANCE",
+            color = Color.White.copy(alpha = 0.8f),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            AppearanceCard("DARK GLASS", Color.Black, appearance == "DARK_GLASS") {
+                scope.launch { settingsPrefs.saveAppearance("DARK_GLASS") }
+            }
+            AppearanceCard("FROST WHITE", Color.White.copy(alpha = 0.8f), appearance == "FROST_WHITE") {
+                scope.launch { settingsPrefs.saveAppearance("FROST_WHITE") }
+            }
+            AppearanceCard("DEVICE", Color.Transparent, appearance == "DEVICE") {
+                scope.launch { settingsPrefs.saveAppearance("DEVICE") }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(48.dp))
     }
 }
 
@@ -116,5 +182,35 @@ fun SegmentedControl(options: List<String>, selectedIndex: Int, onOptionSelected
                 Text(option, color = if (index == selectedIndex) Color.Black else Color.White, fontWeight = FontWeight.Bold)
             }
         }
+    }
+}
+
+@Composable
+fun AppearanceCard(title: String, color: Color, isSelected: Boolean, onClick: () -> Unit) {
+    Column(
+        modifier = androidx.compose.ui.Modifier
+            .width(100.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(if (isSelected) Color.White.copy(alpha = 0.2f) else Color.Transparent)
+            .border(1.dp, if (isSelected) Color(0xFF00E5FF) else Color.Transparent, RoundedCornerShape(16.dp))
+            .clickable { onClick() }
+            .padding(8.dp),
+        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = androidx.compose.ui.Modifier
+                .size(60.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(if (title == "DEVICE") Color.Transparent else color)
+        ) {
+            if (title == "DEVICE") {
+                Row(modifier = androidx.compose.ui.Modifier.fillMaxSize()) {
+                    Box(modifier = androidx.compose.ui.Modifier.weight(1f).fillMaxHeight().background(Color.White))
+                    Box(modifier = androidx.compose.ui.Modifier.weight(1f).fillMaxHeight().background(Color(0xFF1E293B)))
+                }
+            }
+        }
+        Spacer(modifier = androidx.compose.ui.Modifier.height(8.dp))
+        Text(title, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
     }
 }

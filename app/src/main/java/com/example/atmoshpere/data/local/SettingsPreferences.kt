@@ -19,6 +19,7 @@ class SettingsPreferences(private val context: Context) {
         val CUSTOM_LAT = doublePreferencesKey("custom_lat")
         val CUSTOM_LON = doublePreferencesKey("custom_lon")
         val CUSTOM_LOCATION_NAME = stringPreferencesKey("custom_location_name")
+        val APPEARANCE = stringPreferencesKey("appearance")
     }
 
     val tempUnit: Flow<String> = context.dataStore.data.map { it[TEMP_UNIT] ?: "metric" }
@@ -27,10 +28,15 @@ class SettingsPreferences(private val context: Context) {
     val useCurrentLocation: Flow<Boolean> = context.dataStore.data.map { it[USE_CURRENT_LOCATION] ?: true }
     val customLat: Flow<Double?> = context.dataStore.data.map { it[CUSTOM_LAT] }
     val customLon: Flow<Double?> = context.dataStore.data.map { it[CUSTOM_LON] }
-    val customLocationName: Flow<String> = context.dataStore.data.map { it[CUSTOM_LOCATION_NAME] ?: "Unknown" }
+    val customLocationName: Flow<String> = context.dataStore.data.map { it[CUSTOM_LOCATION_NAME] ?: "Alexandria, Egypt" }
+    val appearance: Flow<String> = context.dataStore.data.map { it[APPEARANCE] ?: "DARK_GLASS" }
 
     suspend fun saveTempUnit(unit: String) {
         context.dataStore.edit { it[TEMP_UNIT] = unit }
+    }
+
+    suspend fun saveAppearance(theme: String) {
+        context.dataStore.edit { it[APPEARANCE] = theme }
     }
 
     suspend fun saveWindUnit(unit: String) {

@@ -18,6 +18,7 @@ import com.example.atmoshpere.data.remote.FiveDayForecastResponse
 import com.example.atmoshpere.data.receiver.WeatherAlertReceiver
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -40,12 +41,20 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     private val _favorites = MutableStateFlow<List<FavoriteLocation>>(emptyList())
     val favorites: StateFlow<List<FavoriteLocation>> = _favorites
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage
+    private val _uiEvent = kotlinx.coroutines.channels.Channel<UiEvent>()
+    val uiEvent = _uiEvent.receiveAsFlow()
+
+    sealed class UiEvent {
+        data class ShowSnackbar(val message: String) : UiEvent()
+    }
 
     private val alarmManager = application.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-    private val locationDao = com.example.atmoshpere.data.local.AppDatabase.getDatabase(application).locationDao()
     private val fusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(application)
+    
+    private val repository: com.example.atmoshpere.data.repository.WeatherRepository = com.example.atmoshpere.data.repository.WeatherRepositoryImpl(
+        api = com.example.atmoshpere.data.remote.ApiClient.weatherApi,
+        dao = com.example.atmoshpere.data.local.AppDatabase.getDatabase(application).locationDao()
+    )
 
     init {
         android.util.Log.d("AtmosphereDebug", "ViewModel Init Started")
@@ -57,7 +66,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
 
         // Load Favorites from DB
         viewModelScope.launch {
-            locationDao.getAllLocations().collect {
+            repository.getAllLocations().collect {
                 _favorites.value = it
             }
         }
@@ -65,13 +74,13 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
 
     fun addLocation(name: String, lat: Double, lon: Double) {
         viewModelScope.launch {
-            locationDao.insertLocation(FavoriteLocation(cityName = name, latitude = lat, longitude = lon))
+            repository.insertLocation(FavoriteLocation(cityName = name, latitude = lat, longitude = lon))
         }
     }
 
     fun removeLocation(location: FavoriteLocation) {
         viewModelScope.launch {
-            locationDao.deleteLocation(location)
+            repository.deleteLocation(location)
         }
     }
 
@@ -114,7 +123,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
             val currentJob = launch(kotlinx.coroutines.Dispatchers.IO) {
                 try {
                     android.util.Log.d("AtmosphereDebug", "Current Call started")
-                    val current = ApiClient.weatherApi.getCurrentWeather(lat, lon, BuildConfig.API_KEY)
+                    val current = repository.getCurrentWeather(lat, lon, BuildConfig.API_KEY)
                     _currentWeather.value = current
                     android.util.Log.d("AtmosphereDebug", "Current weather saved")
                 } catch (e: Exception) {
@@ -125,7 +134,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
             val forecastJob = launch(kotlinx.coroutines.Dispatchers.IO) {
                 try {
                     android.util.Log.d("AtmosphereDebug", "Forecast Call started")
-                    val forecastData = ApiClient.weatherApi.getFiveDayForecast(lat, lon, BuildConfig.API_KEY)
+                    val forecastData = repository.getFiveDayForecast(lat, lon, BuildConfig.API_KEY)
                     _forecast.value = forecastData
                     android.util.Log.d("AtmosphereDebug", "Forecast saved")
                 } catch (e: Exception) {
