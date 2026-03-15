@@ -27,10 +27,17 @@ enum class AppDestination(val route: String, val icon: ImageVector, val title: S
 
 @Composable
 fun AtmosphereApp() {
-    var currentRoute by remember { mutableStateOf(AppDestination.HOME.route) }
-    var selectedLocation by remember { mutableStateOf<com.example.atmoshpere.data.local.FavoriteLocation?>(null) }
-    var showAddLocation by remember { mutableStateOf(false) }
-    val weatherViewModel: WeatherViewModel = viewModel()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val settingsPrefs = remember { com.example.atmoshpere.data.local.SettingsPreferences(context) }
+    val language by settingsPrefs.language.collectAsState(initial = "en")
+
+    val layoutDirection = if (language == "ar") androidx.compose.ui.unit.LayoutDirection.Rtl else androidx.compose.ui.unit.LayoutDirection.Ltr
+
+    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides layoutDirection) {
+        var currentRoute by remember { mutableStateOf(AppDestination.HOME.route) }
+        var selectedLocation by remember { mutableStateOf<com.example.atmoshpere.data.local.FavoriteLocation?>(null) }
+        var showAddLocation by remember { mutableStateOf(false) }
+        val weatherViewModel: WeatherViewModel = viewModel()
 
     val bgGradient = Brush.verticalGradient(
         colors = listOf(Color(0xFF4DA0FF), Color(0xFF00E5FF))
@@ -48,7 +55,7 @@ fun AtmosphereApp() {
                         AppDestination.values().forEach { destination ->
                             NavigationBarItem(
                                 icon = { Icon(destination.icon, contentDescription = destination.title) },
-                                label = { Text(destination.title) },
+                                label = { Text(com.example.atmoshpere.ui.utils.Translations.get(destination.title, language)) },
                                 selected = currentRoute == destination.route,
                                 onClick = { currentRoute = destination.route },
                                 colors = NavigationBarItemDefaults.colors(
@@ -94,4 +101,5 @@ fun AtmosphereApp() {
             }
         }
     }
+}
 }

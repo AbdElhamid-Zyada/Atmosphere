@@ -80,6 +80,7 @@ fun HomeScreenContent(
     val settingsPrefs = remember { com.example.atmoshpere.data.local.SettingsPreferences(context) }
     val tempUnit by settingsPrefs.tempUnit.collectAsState(initial = "metric")
     val windUnit by settingsPrefs.windUnit.collectAsState(initial = "m/s")
+    val language by settingsPrefs.language.collectAsState(initial = "en")
 
     val tempLabel = when(tempUnit) {
         "imperial" -> "°F"
@@ -181,7 +182,7 @@ fun HomeScreenContent(
 
         if (forecast != null) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
-                Text("Hourly Forecast", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(com.example.atmoshpere.ui.utils.Translations.get("Hourly Forecast", language), color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -210,7 +211,7 @@ fun HomeScreenContent(
             Spacer(modifier = Modifier.height(32.dp))
 
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
-                Text("5-Day Forecast", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(com.example.atmoshpere.ui.utils.Translations.get("5-Day Forecast", language), color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.height(16.dp))
 

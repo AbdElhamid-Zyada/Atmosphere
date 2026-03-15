@@ -21,6 +21,7 @@ import com.example.atmoshpere.data.local.SettingsPreferences
 import com.example.atmoshpere.ui.components.GlassCard
 import com.example.atmoshpere.ui.viewmodel.WeatherViewModel
 import kotlinx.coroutines.launch
+import com.example.atmoshpere.ui.utils.Translations
 
 @Composable
 fun SettingsScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
@@ -44,7 +45,7 @@ fun SettingsScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
     ) {
         Spacer(modifier = Modifier.height(48.dp))
         Text(
-            text = "Settings",
+            text = Translations.get("Settings", language),
             color = Color.White,
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold
@@ -53,7 +54,7 @@ fun SettingsScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "UNITS & LOCALIZATION",
+            text = Translations.get("UNITS & LOCALIZATION", language),
             color = Color.White.copy(alpha = 0.8f),
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
@@ -63,9 +64,8 @@ fun SettingsScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
 
         GlassCard(modifier = Modifier.fillMaxWidth(), alpha = 0.15f) {
             Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                // Temperature Row
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Temperature Unit", color = Color.White)
+                    Text(Translations.get("Temperature Unit", language), color = Color.White)
                     val options = listOf("metric", "imperial", "standard")
                     val displayOptions = listOf("°C", "°F", "K")
                     val selectedIndex = options.indexOf(tempUnit)
@@ -74,9 +74,8 @@ fun SettingsScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
                     }
                 }
 
-                // Wind Row
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Wind Speed", color = Color.White)
+                    Text(Translations.get("Wind Speed", language), color = Color.White)
                     val options = listOf("m/s", "mph")
                     val selectedIndex = options.indexOf(windUnit)
                     SegmentedControl(options = options, selectedIndex = if(selectedIndex>=0) selectedIndex else 0) {
@@ -84,9 +83,8 @@ fun SettingsScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
                     }
                 }
 
-                // Location Options
                 Column {
-                    Text("Location", color = Color.White)
+                    Text(Translations.get("Location", language), color = Color.White)
                     Spacer(modifier = Modifier.height(12.dp))
                     
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -95,7 +93,7 @@ fun SettingsScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
                             onClick = { scope.launch { settingsPrefs.saveUseCurrentLocation(true) } },
                             colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00E5FF), unselectedColor = Color.White)
                         )
-                        Text("Use current location", color = Color.White, modifier = Modifier.clickable { scope.launch { settingsPrefs.saveUseCurrentLocation(true) } })
+                        Text(Translations.get("Use current location", language), color = Color.White, modifier = Modifier.clickable { scope.launch { settingsPrefs.saveUseCurrentLocation(true) } })
                     }
                     
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -104,7 +102,7 @@ fun SettingsScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
                             onClick = { scope.launch { settingsPrefs.saveUseCurrentLocation(false) } },
                             colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00E5FF), unselectedColor = Color.White)
                         )
-                        Text("Choose custom location", color = Color.White, modifier = Modifier.clickable { scope.launch { settingsPrefs.saveUseCurrentLocation(false) } })
+                        Text(Translations.get("Choose custom location", language), color = Color.White, modifier = Modifier.clickable { scope.launch { settingsPrefs.saveUseCurrentLocation(false) } })
                     }
 
                     if (!useCurrentLocation) {
@@ -124,9 +122,8 @@ fun SettingsScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
                     }
                 }
 
-                // Language Row
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Language", color = Color.White)
+                    Text(Translations.get("Language", language), color = Color.White)
                     val options = listOf("en", "ar")
                     val displayOptions = listOf("EN", "AR")
                     val selectedIndex = options.indexOf(language)
@@ -140,7 +137,7 @@ fun SettingsScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "APPEARANCE",
+            text = Translations.get("APPEARANCE", language),
             color = Color.White.copy(alpha = 0.8f),
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
@@ -149,13 +146,13 @@ fun SettingsScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            AppearanceCard("DARK GLASS", Color.Black, appearance == "DARK_GLASS") {
+            AppearanceCard("DARK_GLASS", Translations.get("DARK GLASS", language), Color.Black, appearance == "DARK_GLASS") {
                 scope.launch { settingsPrefs.saveAppearance("DARK_GLASS") }
             }
-            AppearanceCard("FROST WHITE", Color.White.copy(alpha = 0.8f), appearance == "FROST_WHITE") {
+            AppearanceCard("FROST_WHITE", Translations.get("FROST WHITE", language), Color.White.copy(alpha = 0.8f), appearance == "FROST_WHITE") {
                 scope.launch { settingsPrefs.saveAppearance("FROST_WHITE") }
             }
-            AppearanceCard("DEVICE", Color.Transparent, appearance == "DEVICE") {
+            AppearanceCard("DEVICE", Translations.get("DEVICE", language), Color.Transparent, appearance == "DEVICE") {
                 scope.launch { settingsPrefs.saveAppearance("DEVICE") }
             }
         }
@@ -186,7 +183,7 @@ fun SegmentedControl(options: List<String>, selectedIndex: Int, onOptionSelected
 }
 
 @Composable
-fun AppearanceCard(title: String, color: Color, isSelected: Boolean, onClick: () -> Unit) {
+fun AppearanceCard(title: String, displayTitle: String, color: Color, isSelected: Boolean, onClick: () -> Unit) {
     Column(
         modifier = androidx.compose.ui.Modifier
             .width(100.dp)
@@ -211,6 +208,6 @@ fun AppearanceCard(title: String, color: Color, isSelected: Boolean, onClick: ()
             }
         }
         Spacer(modifier = androidx.compose.ui.Modifier.height(8.dp))
-        Text(title, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        Text(displayTitle, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
     }
 }

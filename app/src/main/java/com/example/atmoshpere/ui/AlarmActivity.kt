@@ -62,6 +62,7 @@ class AlarmActivity : ComponentActivity() {
                 val context = androidx.compose.ui.platform.LocalContext.current
                 val settingsPrefs = remember { com.example.atmoshpere.data.local.SettingsPreferences(context) }
                 val tempUnit by settingsPrefs.tempUnit.collectAsState(initial = "metric")
+                val language by settingsPrefs.language.collectAsState(initial = "en")
                 val tempLabel = when(tempUnit) {
                     "imperial" -> "°F"
                     "standard" -> "K"
@@ -85,14 +86,14 @@ class AlarmActivity : ComponentActivity() {
                     ) {
                         Spacer(modifier = Modifier.height(64.dp))
                         Text(
-                            "🚨 LOOK OUTSIDE! 🚨",
+                            com.example.atmoshpere.ui.utils.Translations.get("🚨 LOOK OUTSIDE! 🚨", language),
                             color = Color(0xFF00E5FF),
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Black
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "Today's weather brief is here",
+                            com.example.atmoshpere.ui.utils.Translations.get("Today's weather brief is here", language),
                             color = Color.White.copy(alpha = 0.7f),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium
@@ -146,7 +147,7 @@ class AlarmActivity : ComponentActivity() {
                             colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                             shape = RoundedCornerShape(16.dp)
                         ) {
-                            Text("DISMISS", color = Color.Black, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Text(com.example.atmoshpere.ui.utils.Translations.get("DISMISS", language), color = Color.Black, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         }
                         Spacer(modifier = Modifier.height(32.dp))
                     }

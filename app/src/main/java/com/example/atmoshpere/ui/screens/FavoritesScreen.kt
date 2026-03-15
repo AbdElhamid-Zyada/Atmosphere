@@ -32,6 +32,10 @@ fun FavoritesScreen(
     onAddLocationClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val settingsPrefs = remember { com.example.atmoshpere.data.local.SettingsPreferences(context) }
+    val language by settingsPrefs.language.collectAsState(initial = "en")
+
     val favorites by viewModel.favorites.collectAsState()
     var locationToDelete by remember { mutableStateOf<com.example.atmoshpere.data.local.FavoriteLocation?>(null) }
     
@@ -108,14 +112,14 @@ fun FavoritesScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                 shape = RoundedCornerShape(28.dp)
             ) {
-                Text("+ ADD LOCATION", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(com.example.atmoshpere.ui.utils.Translations.get("+ ADD LOCATION", language), color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
         }
 
         locationToDelete?.let { location ->
             AtmosphereConfirmDialog(
-                title = "Remove Location",
-                message = "Are you sure you want to remove ${location.cityName}?",
+                title = com.example.atmoshpere.ui.utils.Translations.get("Remove Location", language),
+                message = "${com.example.atmoshpere.ui.utils.Translations.get("Are you sure you want to remove", language)} ${location.cityName}?",
                 onConfirm = {
                     viewModel.removeLocation(location)
                     locationToDelete = null
