@@ -47,8 +47,8 @@ fun AtmosphereApp() {
             else -> isSystemDark
         }
 
-        val backgroundColor = if (isDark) Color(0xFF0B1120) else Color(0xFFE8F1F8)
-        val backgroundBottomColor = if (isDark) Color(0xFF131A2D) else Color(0xFFCFDEF3)
+        val backgroundColor = if (isDark) Color(0xFF0B1120) else Color(0xFF4DA0FF)
+        val backgroundBottomColor = if (isDark) Color(0xFF131A2D) else Color(0xFF00E5FF)
 
         val bgGradient = Brush.verticalGradient(
             colors = listOf(backgroundColor, backgroundBottomColor)
