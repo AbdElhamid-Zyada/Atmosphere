@@ -59,6 +59,15 @@ class AlarmActivity : ComponentActivity() {
             AtmosphereTheme {
                 val viewModel: WeatherViewModel = viewModel()
                 
+                val context = androidx.compose.ui.platform.LocalContext.current
+                val settingsPrefs = remember { com.example.atmoshpere.data.local.SettingsPreferences(context) }
+                val tempUnit by settingsPrefs.tempUnit.collectAsState(initial = "metric")
+                val tempLabel = when(tempUnit) {
+                    "imperial" -> "°F"
+                    "standard" -> "K"
+                    else -> "°C"
+                }
+
                 // Fetch latest weather for current location
                 androidx.compose.runtime.LaunchedEffect(Unit) {
                     viewModel.fetchLocationAndWeather()
@@ -99,7 +108,7 @@ class AlarmActivity : ComponentActivity() {
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                "${weather.main.temp.toInt()}°",
+                                "${weather.main.temp.toInt()}$tempLabel",
                                 color = Color.White,
                                 fontSize = 72.sp,
                                 fontWeight = FontWeight.Bold
@@ -112,7 +121,7 @@ class AlarmActivity : ComponentActivity() {
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                "Feels like ${weather.main.feelsLike.toInt()}° • ${weather.name}",
+                                "Feels like ${weather.main.feelsLike.toInt()}$tempLabel • ${weather.name}",
                                 color = Color.White.copy(alpha = 0.5f),
                                 fontSize = 14.sp
                             )

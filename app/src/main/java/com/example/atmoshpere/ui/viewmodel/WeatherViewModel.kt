@@ -18,6 +18,7 @@ import com.example.atmoshpere.data.remote.FiveDayForecastResponse
 import com.example.atmoshpere.data.receiver.WeatherAlertReceiver
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.util.*
@@ -32,6 +33,8 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing
+
+    private val settingsPrefs = com.example.atmoshpere.data.local.SettingsPreferences(application)
 
     // Alarms/Alerts State
     private val _alerts = MutableStateFlow<List<WeatherAlert>>(emptyList())
@@ -85,7 +88,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             try {
                 // Fetch to get exact timezone offset from OpenWeather
-                val response = repository.getCurrentWeather(lat, lon, com.example.atmoshpere.BuildConfig.API_KEY)
+                val response = repository.getCurrentWeather(lat, lon, com.example.atmoshpere.BuildConfig.API_KEY, "metric")
                 repository.insertLocation(
                     FavoriteLocation(
                         cityName = name, 
@@ -185,10 +188,17 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             _isRefreshing.value = true
             
+            // Collect Temp Unit preference safely
+            val currentTempUnit = try {
+                settingsPrefs.tempUnit.first()
+            } catch (e: Exception) {
+                "metric"
+            }
+            
             val currentJob = launch(kotlinx.coroutines.Dispatchers.IO) {
                 try {
-                    android.util.Log.d("AtmosphereDebug", "Current Call started")
-                    val current = repository.getCurrentWeather(lat, lon, BuildConfig.API_KEY)
+                    android.util.Log.d("AtmosphereDebug", "Current Call started with unit $currentTempUnit")
+                    val current = repository.getCurrentWeather(lat, lon, BuildConfig.API_KEY, currentTempUnit)
                     _currentWeather.value = current
                     android.util.Log.d("AtmosphereDebug", "Current weather saved")
                 } catch (e: Exception) {
@@ -198,8 +208,8 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
 
             val forecastJob = launch(kotlinx.coroutines.Dispatchers.IO) {
                 try {
-                    android.util.Log.d("AtmosphereDebug", "Forecast Call started")
-                    val forecastData = repository.getFiveDayForecast(lat, lon, BuildConfig.API_KEY)
+                    android.util.Log.d("AtmosphereDebug", "Forecast Call started with unit $currentTempUnit")
+                    val forecastData = repository.getFiveDayForecast(lat, lon, BuildConfig.API_KEY, currentTempUnit)
                     _forecast.value = forecastData
                     android.util.Log.d("AtmosphereDebug", "Forecast saved")
                 } catch (e: Exception) {

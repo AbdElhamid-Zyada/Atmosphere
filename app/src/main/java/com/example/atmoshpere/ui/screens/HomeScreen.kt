@@ -76,6 +76,17 @@ fun HomeScreenContent(
     val forecast by viewModel.forecast.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
 
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val settingsPrefs = remember { com.example.atmoshpere.data.local.SettingsPreferences(context) }
+    val tempUnit by settingsPrefs.tempUnit.collectAsState(initial = "metric")
+    val windUnit by settingsPrefs.windUnit.collectAsState(initial = "m/s")
+
+    val tempLabel = when(tempUnit) {
+        "imperial" -> "°F"
+        "standard" -> "K"
+        else -> "°C"
+    }
+
     if (currentWeather == null) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (isRefreshing) {
@@ -143,16 +154,24 @@ fun HomeScreenContent(
             Text(getWeatherEmoji(current.weather.firstOrNull()?.icon), fontSize = 64.sp)
         }
 
-        Text("${current.main.temp.roundToInt()}°C", color = Color.White, fontSize = 72.sp, fontWeight = FontWeight.Bold)
+        val apiSpeedInMph = tempUnit == "imperial"
+        val displayWindSpeed = if (apiSpeedInMph && windUnit == "m/s") {
+            current.wind.speed / 2.23694f
+        } else if (!apiSpeedInMph && windUnit == "mph") {
+            current.wind.speed * 2.23694f
+        } else {
+            current.wind.speed
+        }
+
+        Text("${current.main.temp.roundToInt()}$tempLabel", color = Color.White, fontSize = 72.sp, fontWeight = FontWeight.Bold)
         Text(current.weather.firstOrNull()?.main ?: "Clear", color = Color.White.copy(alpha = 0.8f), fontSize = 18.sp, fontWeight = FontWeight.Medium)
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Re-added streamlined approach
         GlassCard(modifier = Modifier.fillMaxWidth(), alpha = 0.15f) {
             Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceAround) {
                 InfoCard(value = "${current.main.humidity}%", icon = "💧")
-                InfoCard(value = "${current.wind.speed.roundToInt()}km/h", icon = "💨")
+                InfoCard(value = "${displayWindSpeed.roundToInt()} $windUnit", icon = "💨")
                 InfoCard(value = "${current.main.pressure}hPa", icon = "🌡")
                 InfoCard(value = "${current.clouds.all}%", icon = "☁️")
             }

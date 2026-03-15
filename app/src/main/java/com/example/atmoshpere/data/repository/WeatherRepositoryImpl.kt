@@ -12,12 +12,12 @@ class WeatherRepositoryImpl(
     private val dao: LocationDao
 ) : WeatherRepository {
 
-    override suspend fun getCurrentWeather(lat: Double, lon: Double, apiKey: String): CurrentWeatherResponse {
-        return api.getCurrentWeather(lat, lon, apiKey)
+    override suspend fun getCurrentWeather(lat: Double, lon: Double, apiKey: String, units: String): CurrentWeatherResponse {
+        return api.getCurrentWeather(lat, lon, apiKey, units)
     }
 
-    override suspend fun getFiveDayForecast(lat: Double, lon: Double, apiKey: String): FiveDayForecastResponse {
-        return api.getFiveDayForecast(lat, lon, apiKey)
+    override suspend fun getFiveDayForecast(lat: Double, lon: Double, apiKey: String, units: String): FiveDayForecastResponse {
+        return api.getFiveDayForecast(lat, lon, apiKey, units)
     }
 
     override fun getAllLocations(): Flow<List<FavoriteLocation>> {

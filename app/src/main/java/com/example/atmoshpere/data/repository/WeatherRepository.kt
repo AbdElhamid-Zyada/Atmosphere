@@ -6,8 +6,8 @@ import com.example.atmoshpere.data.remote.FiveDayForecastResponse
 import kotlinx.coroutines.flow.Flow
 
 interface WeatherRepository {
-    suspend fun getCurrentWeather(lat: Double, lon: Double, apiKey: String): CurrentWeatherResponse
-    suspend fun getFiveDayForecast(lat: Double, lon: Double, apiKey: String): FiveDayForecastResponse
+    suspend fun getCurrentWeather(lat: Double, lon: Double, apiKey: String, units: String): CurrentWeatherResponse
+    suspend fun getFiveDayForecast(lat: Double, lon: Double, apiKey: String, units: String): FiveDayForecastResponse
     
     // Favorites
     fun getAllLocations(): Flow<List<FavoriteLocation>>
