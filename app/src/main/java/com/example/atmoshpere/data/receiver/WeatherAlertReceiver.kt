@@ -18,14 +18,14 @@ class WeatherAlertReceiver : BroadcastReceiver() {
         val alertType = intent.getStringExtra("ALERT_TYPE") ?: "NOTIFICATION"
 
         if (alertType == "ALERT") {
-            // Start Alarm Screen Direct
+
             val alarmIntent = Intent(context, AlarmActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 putExtra("ALERT_ID", alertId)
             }
             context.startActivity(alarmIntent)
         } else {
-            // Show Notification instead
+
             showNotification(context, alertId)
         }
     }

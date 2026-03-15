@@ -61,9 +61,17 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     private val alarmManager = application.getSystemService(Context.ALARM_SERVICE) as AlarmManager
     private val fusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(application)
     
-    private val repository: com.example.atmoshpere.data.repository.WeatherRepository = com.example.atmoshpere.data.repository.WeatherRepositoryImpl(
-        api = com.example.atmoshpere.data.remote.ApiClient.weatherApi,
-        dao = com.example.atmoshpere.data.local.AppDatabase.getDatabase(application).locationDao()
+    private val db = com.example.atmoshpere.data.local.WeatherDatabase.getDatabase(application)
+    private val repository: com.example.atmoshpere.data.repository.IWeatherRepository = com.example.atmoshpere.data.repository.WeatherRepositoryImpl(
+        remoteDataSource = com.example.atmoshpere.data.remote.RemoteDataSourceImpl(
+            weatherApi = com.example.atmoshpere.data.remote.ApiClient.weatherApi,
+            geocodingApi = com.example.atmoshpere.data.remote.GeocodingClient.geocodingApi
+        ),
+        localDataSource = com.example.atmoshpere.data.local.LocalDataSourceImpl(
+            favoriteDao = db.favoriteLocationDao(),
+            alertDao = db.alertDao(),
+            weatherDao = db.weatherDao()
+        )
     )
 
     init {
@@ -89,7 +97,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
             try {
                 // Fetch to get exact timezone offset from OpenWeather
                 val response = repository.getCurrentWeather(lat, lon, com.example.atmoshpere.BuildConfig.API_KEY, "metric")
-                repository.insertLocation(
+                repository.insertFavoriteLocation(
                     FavoriteLocation(
                         cityName = name, 
                         latitude = lat, 
@@ -101,7 +109,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
             } catch (e: Exception) {
                 e.printStackTrace()
                 // Fallback with timezone 0
-                repository.insertLocation(
+                repository.insertFavoriteLocation(
                     FavoriteLocation(
                         cityName = name, 
                         latitude = lat, 
@@ -148,7 +156,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
 
     fun removeLocation(location: FavoriteLocation) {
         viewModelScope.launch {
-            repository.deleteLocation(location)
+            repository.deleteFavoriteLocation(location)
         }
     }
 

@@ -7,8 +7,8 @@ import androidx.room.PrimaryKey
 data class WeatherAlert(
     @PrimaryKey
     val id: String = java.util.UUID.randomUUID().toString(),
-    val type: String, // "ALERT" or "NOTIFICATION"
-    val startTime: String, // "HH:mm"
-    val endTime: String,  // "HH:mm"
+    val type: String,
+    val startTime: String,
+    val endTime: String,
     val isActive: Boolean = true
 )

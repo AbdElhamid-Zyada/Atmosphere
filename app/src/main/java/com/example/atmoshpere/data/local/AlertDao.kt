@@ -4,19 +4,9 @@ import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface LocationDao {
-    @Query("SELECT * FROM favorite_locations")
-    fun getAllLocations(): Flow<List<FavoriteLocation>>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertLocation(location: FavoriteLocation)
-
-    @Delete
-    suspend fun deleteLocation(location: FavoriteLocation)
-
-    // Alerts
+interface AlertDao {
     @Query("SELECT * FROM weather_alerts")
-    fun getAllAlerts(): Flow<List<WeatherAlert>>
+    fun getAlerts(): Flow<List<WeatherAlert>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAlert(alert: WeatherAlert): Long
