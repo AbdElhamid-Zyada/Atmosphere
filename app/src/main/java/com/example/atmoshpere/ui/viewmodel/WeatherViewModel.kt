@@ -58,11 +58,13 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
 
     init {
         android.util.Log.d("AtmosphereDebug", "ViewModel Init Started")
-        // Load initial dummy alerts or from db
-        _alerts.value = listOf(
-            WeatherAlert(type = "ALERT", startTime = "08:00", endTime = "14:00"),
-            WeatherAlert(type = "NOTIFICATION", startTime = "10:00", endTime = "18:00")
-        )
+
+        // Load Alerts from DB
+        viewModelScope.launch {
+            repository.getAllAlerts().collect {
+                _alerts.value = it
+            }
+        }
 
         // Load Favorites from DB
         viewModelScope.launch {
@@ -152,31 +154,34 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     // --- ALERTS CRUD & SCHEDULING ---
 
     fun addAlert(alert: WeatherAlert) {
-        val updated = _alerts.value + alert
-        _alerts.value = updated
-        if (alert.isActive) scheduleAlarm(alert)
+        viewModelScope.launch {
+            repository.insertAlert(alert)
+            if (alert.isActive) scheduleAlarm(alert)
+        }
     }
 
     fun removeAlert(alert: WeatherAlert) {
-        val updated = _alerts.value.filter { it.id != alert.id }
-        _alerts.value = updated
-        cancelAlarm(alert)
+        viewModelScope.launch {
+            repository.deleteAlert(alert)
+            cancelAlarm(alert)
+        }
     }
 
     fun toggleAlert(alert: WeatherAlert) {
-        val updatedlist = _alerts.value.map {
-            if (it.id == alert.id) it.copy(isActive = !it.isActive) else it
+        viewModelScope.launch {
+            val newIsActive = !alert.isActive
+            repository.updateAlertStatus(alert.id, newIsActive)
+            if (newIsActive) scheduleAlarm(alert.copy(isActive = true)) else cancelAlarm(alert)
         }
-        _alerts.value = updatedlist
-        val newTarget = updatedlist.first { it.id == alert.id }
-        if (newTarget.isActive) scheduleAlarm(newTarget) else cancelAlarm(newTarget)
     }
 
     fun updateAlert(oldAlert: WeatherAlert, newAlert: WeatherAlert) {
-        cancelAlarm(oldAlert)
-        val updatedlist = _alerts.value.map { if (it.id == oldAlert.id) newAlert else it }
-        _alerts.value = updatedlist
-        if (newAlert.isActive) scheduleAlarm(newAlert)
+        viewModelScope.launch {
+            repository.deleteAlert(oldAlert)
+            repository.insertAlert(newAlert)
+            cancelAlarm(oldAlert)
+            if (newAlert.isActive) scheduleAlarm(newAlert)
+        }
     }
 
     private fun scheduleAlarm(alert: WeatherAlert) {

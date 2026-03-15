@@ -1,5 +1,6 @@
 package com.example.atmoshpere.ui
 
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -7,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,9 +22,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.font.FontWeight
 import android.media.RingtoneManager
 import android.media.Ringtone
+import kotlin.math.round
 
 class AlarmActivity : ComponentActivity() {
-    private var ringtone: Ringtone? = null
+    private var mediaPlayer: android.media.MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,11 +44,16 @@ class AlarmActivity : ComponentActivity() {
         
         enableEdgeToEdge()
         
-        // Play Alarm Sound
-        val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM) ?: 
-                      RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-        ringtone = RingtoneManager.getRingtone(applicationContext, alarmUri)
-        ringtone?.play()
+        try {
+            val alertSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+            mediaPlayer = MediaPlayer.create(this, alertSound)
+            mediaPlayer?.isLooping = true
+            mediaPlayer?.start()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
 
         setContent {
             AtmosphereTheme {
@@ -58,43 +66,79 @@ class AlarmActivity : ComponentActivity() {
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Color.Black // Dark background for alarm
+                    color = Color(0xFF0B1220)
                 ) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        Column(modifier = Modifier.fillMaxSize()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 64.dp, bottom = 16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    "WEATHER ALARM",
-                                    color = Color.Red,
-                                    fontSize = 24.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                            
-                            Box(modifier = Modifier.weight(1f)) {
-                                HomeScreenContent(viewModel = viewModel)
-                            }
+                    val currentWeather = viewModel.currentWeather.collectAsState().value
 
-                            Button(
-                                onClick = { 
-                                    ringtone?.stop()
-                                    finish() 
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(32.dp)
-                                    .height(64.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                                shape = RoundedCornerShape(32.dp)
-                            ) {
-                                Text("DISMISS", color = Color.Black, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Column(
+                        modifier = Modifier.fillMaxSize().padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Spacer(modifier = Modifier.height(64.dp))
+                        Text(
+                            "🚨 LOOK OUTSIDE! 🚨",
+                            color = Color(0xFF00E5FF),
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "Today's weather brief is here",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        if (currentWeather != null) {
+                            val weather = currentWeather!!
+                            Text(
+                                com.example.atmoshpere.ui.screens.getWeatherEmoji(weather.weather.firstOrNull()?.main ?: "Clear"),
+                                fontSize = 100.sp
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                "${weather.main.temp.toInt()}°",
+                                color = Color.White,
+                                fontSize = 72.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                weather.weather.firstOrNull()?.description?.replaceFirstChar { it.uppercase() } ?: "Clear",
+                                color = Color.White,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                "Feels like ${weather.main.feelsLike.toInt()}° • ${weather.name}",
+                                color = Color.White.copy(alpha = 0.5f),
+                                fontSize = 14.sp
+                            )
+                        } else {
+                            Box(modifier = Modifier.size(100.dp), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(color = Color(0xFF00E5FF))
                             }
                         }
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        Button(
+                            onClick = { 
+                                mediaPlayer?.stop()
+                                mediaPlayer?.release()
+                                finish() 
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Text("DISMISS", color = Color.Black, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.height(32.dp))
                     }
                 }
             }
@@ -102,7 +146,8 @@ class AlarmActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        ringtone?.stop()
+        mediaPlayer?.stop()
+        mediaPlayer?.release()
         super.onDestroy()
     }
 }

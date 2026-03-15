@@ -13,4 +13,10 @@ interface WeatherRepository {
     fun getAllLocations(): Flow<List<FavoriteLocation>>
     suspend fun insertLocation(location: FavoriteLocation)
     suspend fun deleteLocation(location: FavoriteLocation)
+
+    // Alerts
+    fun getAllAlerts(): Flow<List<com.example.atmoshpere.data.local.WeatherAlert>>
+    suspend fun insertAlert(alert: com.example.atmoshpere.data.local.WeatherAlert): Long
+    suspend fun deleteAlert(alert: com.example.atmoshpere.data.local.WeatherAlert)
+    suspend fun updateAlertStatus(id: String, isActive: Boolean)
 }

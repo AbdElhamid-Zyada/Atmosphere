@@ -31,4 +31,20 @@ class WeatherRepositoryImpl(
     override suspend fun deleteLocation(location: FavoriteLocation) {
         dao.deleteLocation(location)
     }
+
+    override fun getAllAlerts(): Flow<List<com.example.atmoshpere.data.local.WeatherAlert>> {
+        return dao.getAllAlerts()
+    }
+
+    override suspend fun insertAlert(alert: com.example.atmoshpere.data.local.WeatherAlert): Long {
+        return dao.insertAlert(alert)
+    }
+
+    override suspend fun deleteAlert(alert: com.example.atmoshpere.data.local.WeatherAlert) {
+        dao.deleteAlert(alert)
+    }
+
+    override suspend fun updateAlertStatus(id: String, isActive: Boolean) {
+        dao.updateAlertStatus(id, isActive)
+    }
 }
